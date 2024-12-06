@@ -2,7 +2,8 @@ import fs from "fs";
 import path from "path";
 import { NextApiRequest, NextApiResponse } from "next";
 
-const filePath = path.join(process.cwd(), "data", "cash-book.json");
+const filePath = path.join(process.cwd(), "public", "data", "cash-book.json");
+
 
 interface Entry {
   id: number;
