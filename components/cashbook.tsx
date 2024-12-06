@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import MonthlyReport from "../components/monthlyReport";
 
 interface Entry {
   id: number;
@@ -20,10 +21,9 @@ export default function CashBook() {
   const [type, setType] = useState<"приход" | "разход">("приход");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
-  const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]); // Днешна дата по подразбиране
-  const [month, setMonth] = useState("");
-  const [year, setYear] = useState("");
-  const [monthlyReport, setMonthlyReport] = useState<MonthlyReport | null>(null);
+  const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]); // Default to today's date
+  const [page, setPage] = useState(1); // Current page
+  const [itemsPerPage] = useState(10); // Items per page
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -34,12 +34,18 @@ export default function CashBook() {
     setIsLoading(true);
     const res = await fetch("/api/cash-book");
     const data = await res.json();
-    setEntries(data);
+
+    // Sort entries by date in descending order
+    const sortedData = data.sort(
+      (a: Entry, b: Entry) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    setEntries(sortedData);
     setIsLoading(false);
   };
 
   const addEntry = async () => {
-    if (!amount || !description) {
+    if (!amount || !description || !date) {
       alert("Моля, попълнете всички полета!");
       return;
     }
@@ -54,19 +60,36 @@ export default function CashBook() {
 
     setAmount("");
     setDescription("");
-    setDate(new Date().toISOString().split("T")[0]); // Връщане на датата към днешната
+   // setDate(""); // Reset to today's date
     await fetchEntries();
   };
 
-  const generateMonthlyReport = async () => {
-    if (!month || !year) {
-      alert("Моля, изберете месец и година!");
-      return;
-    }
+  const deleteEntry = async (id: number) => {
+    const res = await fetch("/api/cash-book", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
 
-    const res = await fetch(`/api/cash-book?month=${month}&year=${year}`);
-    const data = await res.json();
-    setMonthlyReport(data);
+    if (res.ok) {
+      // Update state after deletion
+      setEntries((prevEntries) => prevEntries.filter((entry) => entry.id !== id));
+    } else {
+      alert("Неуспешно изтриване!");
+    }
+  };
+
+  // Pagination logic
+  const indexOfLastItem = page * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentEntries = entries.slice(indexOfFirstItem, indexOfLastItem);
+
+  const totalPages = Math.ceil(entries.length / itemsPerPage);
+
+  const changePage = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setPage(newPage);
+    }
   };
 
   return (
@@ -75,7 +98,7 @@ export default function CashBook() {
         Касова книга
       </h1>
 
-      {/* Форма за добавяне на записи */}
+      {/* Form for Adding Entries */}
       <div className="mb-6">
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <select
@@ -115,99 +138,79 @@ export default function CashBook() {
         </button>
       </div>
 
-      {/* Таблица със записи */}
+      {/* Entries Table */}
       <div className="overflow-x-auto">
         {isLoading ? (
           <p className="text-gray-500 text-center">Зареждане...</p>
         ) : (
-          <table className="min-w-full bg-white border border-gray-200 rounded-lg">
-            <thead>
-              <tr className="bg-gray-100 text-left">
-                <th className="px-4 py-2 border">Дата</th>
-                <th className="px-4 py-2 border">Тип</th>
-                <th className="px-4 py-2 border">Сума</th>
-                <th className="px-4 py-2 border">Описание</th>
-              </tr>
-            </thead>
-            <tbody>
-              {entries.map((entry) => (
-                <tr key={entry.id}>
-                  <td className="px-4 py-2 border">
-                    {new Date(entry.date).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 py-2 border">{entry.type}</td>
-                  <td className="px-4 py-2 border">{entry.amount.toFixed(2)} лв</td>
-                  <td className="px-4 py-2 border">{entry.description}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      {/* Месечен отчет */}
-      <div className="mt-6">
-        <h2 className="text-xl font-bold text-gray-700 mb-4">Месечен отчет</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <select
-            className="border border-gray-300 rounded-lg p-2"
-            value={month}
-            onChange={(e) => setMonth(e.target.value)}
-          >
-            <option value="">Месец</option>
-            {[...Array(12).keys()].map((m) => (
-              <option key={m + 1} value={m + 1}>
-                {m + 1}
-              </option>
-            ))}
-          </select>
-          <input
-            type="number"
-            placeholder="Година"
-            value={year}
-            onChange={(e) => setYear(e.target.value)}
-            className="border border-gray-300 rounded-lg p-2"
-          />
-          <button
-            onClick={generateMonthlyReport}
-            className="bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition"
-          >
-            Генерирай отчет
-          </button>
-        </div>
-        {monthlyReport && (
-          <div className="mt-4">
-            <h3 className="text-lg font-bold text-gray-700">
-              Отчет за {month}/{year}
-            </h3>
-            <p>Приходи: {monthlyReport.totalIncome.toFixed(2)} лв</p>
-            <p>Разходи: {monthlyReport.totalExpense.toFixed(2)} лв</p>
-            <p>Салдо: {monthlyReport.balance.toFixed(2)} лв</p>
-            <table className="min-w-full bg-white border border-gray-200 rounded-lg mt-4">
+          <div>
+            <table className="min-w-full bg-white border border-gray-200 rounded-lg">
               <thead>
                 <tr className="bg-gray-100 text-left">
                   <th className="px-4 py-2 border">Дата</th>
                   <th className="px-4 py-2 border">Тип</th>
                   <th className="px-4 py-2 border">Сума</th>
                   <th className="px-4 py-2 border">Описание</th>
+                  <th className="px-4 py-2 border">Действия</th>
                 </tr>
               </thead>
               <tbody>
-                {monthlyReport.entries.map((entry) => (
-                  <tr key={entry.id}>
+                {currentEntries.map((entry) => (
+                  <tr
+                    key={entry.id}
+                    className={
+                      entry.type === "приход"
+                        ? "bg-green-100" // Light green for income
+                        : "bg-red-100" // Light red for expense
+                    }
+                  >
                     <td className="px-4 py-2 border">
                       {new Date(entry.date).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-2 border">{entry.type}</td>
                     <td className="px-4 py-2 border">{entry.amount.toFixed(2)} лв</td>
                     <td className="px-4 py-2 border">{entry.description}</td>
+                    <td className="px-4 py-2 border">
+                      <button
+                        onClick={() => deleteEntry(entry.id)}
+                        className="text-gray-500 hover:text-red-500 transition"
+                      >
+                        🗑️
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+
+            {/* Pagination Controls */}
+            <div className="flex justify-center items-center mt-4">
+              <button
+                onClick={() => changePage(page - 1)}
+                disabled={page === 1}
+                className={`px-4 py-2 border rounded-lg ${
+                  page === 1 ? "text-gray-400" : "text-blue-500 hover:bg-blue-100"
+                }`}
+              >
+                Предишна
+              </button>
+              <span className="px-4 py-2">
+                Страница {page} от {totalPages}
+              </span>
+              <button
+                onClick={() => changePage(page + 1)}
+                disabled={page === totalPages}
+                className={`px-4 py-2 border rounded-lg ${
+                  page === totalPages ? "text-gray-400" : "text-blue-500 hover:bg-blue-100"
+                }`}
+              >
+                Следваща
+              </button>
+            </div>
           </div>
         )}
       </div>
+
     </div>
   );
 }

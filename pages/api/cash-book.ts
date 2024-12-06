@@ -4,7 +4,6 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 const filePath = path.join(process.cwd(), "public", "data", "cash-book.json");
 
-
 interface Entry {
   id: number;
   date: string;
@@ -29,9 +28,31 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   const { method } = req;
 
   if (method === "GET") {
-    const { month, year } = req.query;
+    const { month, year, summary } = req.query;
 
     const data = loadData();
+
+    if (summary === "yearly") {
+      const currentYear = new Date().getFullYear();
+      const monthlySummary = Array(12).fill(null).map(() => ({
+        income: 0,
+        expense: 0,
+      }));
+
+      data.forEach((entry) => {
+        const entryDate = new Date(entry.date);
+        if (entryDate.getFullYear() === currentYear) {
+          const monthIndex = entryDate.getMonth(); // 0 = January, 1 = February, etc.
+          if (entry.type === "приход") {
+            monthlySummary[monthIndex].income += entry.amount;
+          } else if (entry.type === "разход") {
+            monthlySummary[monthIndex].expense += entry.amount;
+          }
+        }
+      });
+
+      return res.status(200).json(monthlySummary);
+    }
 
     if (month && year) {
       const filteredData = data.filter((entry) => {
@@ -60,9 +81,9 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
     res.status(200).json(data);
   } else if (method === "POST") {
-    const { type, amount, description } = req.body;
+    const { type, amount, description, date } = req.body;
 
-    if (!type || !amount || !description) {
+    if (!type || !amount || !description || !date) {
       return res.status(400).json({ error: "Missing fields" });
     }
 
@@ -70,7 +91,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
     const newEntry: Entry = {
       id: Date.now(),
-      date: new Date().toISOString(),
+      date,
       type: type as "приход" | "разход",
       amount: parseFloat(amount),
       description,
