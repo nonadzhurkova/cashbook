@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import MonthlyReport from "../components/monthlyReport";
 
 interface Entry {
   id: number;
@@ -9,12 +8,7 @@ interface Entry {
   description: string;
 }
 
-interface MonthlyReport {
-  entries: Entry[];
-  totalIncome: number;
-  totalExpense: number;
-  balance: number;
-}
+
 
 export default function CashBook() {
   const [entries, setEntries] = useState<Entry[]>([]);

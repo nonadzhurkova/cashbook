@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import CashBook from "../components/cashbook";
-import Link from "next/link";
 import Navbar from "../components/navbar";
 
 export default function Home() {
