@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getDatabase, ref, set, get, push, remove } from "firebase/database";
+import { getDatabase, ref, set, get, push, remove, update } from "firebase/database";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -27,5 +27,5 @@ export async function fetchEntries() {
 }
 
 
-export { ref, set, get, push, remove };
+export { ref, set, get, push, remove, update };
 

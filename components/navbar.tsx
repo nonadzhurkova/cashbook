@@ -26,6 +26,15 @@ export default function Navbar() {
             Отчети
           </Link>
           <Link
+            href="/bookings"
+            className="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-500 transition"
+          >
+            Резервации
+          </Link>
+          <Link href="/upcoming-expenses" className="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-500 transition">
+            Предстоящи Разходи
+          </Link>
+          <Link
             href="/dashboard"
             className="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-500 transition"
           >
