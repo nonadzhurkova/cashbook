@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { fetchEntries } from "../pages/api/firebase-utils"; // Импортирайте вашата функция за четене от Firebase
 
 interface Entry {
@@ -17,9 +17,14 @@ interface MonthlyReportData {
 }
 
 export default function MonthlyReport() {
-  const [month, setMonth] = useState("");
-  const [year, setYear] = useState("");
+  const currentDate = new Date();
+  const [month, setMonth] = useState<string>((currentDate.getMonth() + 1).toString());
+  const [year, setYear] = useState<string>(currentDate.getFullYear().toString());
   const [report, setReport] = useState<MonthlyReportData | null>(null);
+
+  useEffect(() => {
+    generateMonthlyReport(); // Генериране на отчета при зареждане
+  }, []);
 
   const generateMonthlyReport = async () => {
     if (!month || !year) {
@@ -29,7 +34,7 @@ export default function MonthlyReport() {
 
     try {
       const data = await fetchEntries();
-    
+
       const entries = Object.entries(data || {}).map(([id, entry]) => {
         const { id: _, ...rest } = entry as Entry; // Премахваме `id`, ако съществува
         return {
@@ -37,7 +42,7 @@ export default function MonthlyReport() {
           ...rest, // Останалите свойства
         };
       });
-      
+
       // Филтриране на записите за избрания месец и година
       const filteredEntries = entries.filter((entry) => {
         const entryDate = new Date(entry.date);
