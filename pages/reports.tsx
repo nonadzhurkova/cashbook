@@ -1,7 +1,17 @@
-import Navbar from "@/components/navbar";
 import MonthlyReport from "../components/monthlyReport";
+import { useRouter } from "next/router";
+import { useEffect } from "react";
 
 export default function Reports() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const isLoggedIn = sessionStorage.getItem("loggedIn");
+    if (!isLoggedIn) {
+      router.push("/login"); // Redirect to login if not logged in
+    }
+  }, [router])
+  
   return (
     <div>
         <div className="max-w-6xl mx-auto bg-white shadow-lg rounded-lg p-6">

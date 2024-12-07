@@ -5,6 +5,7 @@ import ChartProfit from "@/components/chartprofit";
 import CumulativeChart from "@/components/chartcumulative";
 import BalanceChart from "@/components/chartbalance";
 import ExpensesDistribution from "@/components/chartExpences";
+import { useRouter } from "next/router";
 
 // Динамичен импорт за ApexCharts
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
@@ -32,8 +33,18 @@ export default function Dashboard() {
   const [chartOptions, setChartOptions] = useState({});
   const [chartData, setChartData] = useState<ChartData>([]);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
+
+    
+   
+        const isLoggedIn = sessionStorage.getItem("loggedIn");
+        if (!isLoggedIn) {
+          router.push("/login"); // Redirect to login if not logged in
+        }
+      
+      
     const fetchData = async () => {
       try {
         const data: Record<string, Entry> = await fetchEntries();
@@ -107,7 +118,7 @@ export default function Dashboard() {
     };
 
     fetchData();
-  }, []);
+  },  [router]);
 
   return (
     <div >
