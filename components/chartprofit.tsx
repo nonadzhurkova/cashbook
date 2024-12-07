@@ -46,8 +46,8 @@ export default function ChartProfit() {
         const sortedDates = Object.keys(groupedData).sort();
 
         // Създаване на данни за графиката
-        const incomeData = sortedDates.map((date) => groupedData[date].income.toFixed(2));
-        const expenseData = sortedDates.map((date) => groupedData[date].expense.toFixed(2));
+        const incomeData = sortedDates.map((date) => parseFloat(groupedData[date].income.toFixed(2)));
+        const expenseData = sortedDates.map((date) => parseFloat(groupedData[date].expense.toFixed(2)));
 
         // Настройки за графиката
         setChartOptions({
@@ -92,15 +92,15 @@ export default function ChartProfit() {
   }, []);
 
   return (
-      <div className="max-w-6xl mx-auto bg-white shadow-lg rounded-lg p-6">
-        <h1 className="text-2xl font-bold text-gray-700 text-center mb-6">
-          Dashboard - Приходи и Разходи
-        </h1>
-        {error ? (
-          <p className="text-red-500 text-center">{error}</p>
-        ) : (
-          <Chart options={chartOptions} series={chartData} type="area" height={350} />
-        )}
-      </div>
+    <div className="max-w-6xl mx-auto bg-white shadow-lg rounded-lg p-6">
+      <h1 className="text-2xl font-bold text-gray-700 text-center mb-6">
+        Dashboard - Приходи и Разходи
+      </h1>
+      {error ? (
+        <p className="text-red-500 text-center">{error}</p>
+      ) : (
+        <Chart options={chartOptions} series={chartData} type="area" height={350} />
+      )}
+    </div>
   );
 }
