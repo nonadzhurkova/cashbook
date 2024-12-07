@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { fetchEntries } from "../pages/api/firebase-utils"; // Импортирайте вашата функция за четене от Firebase
 
 interface Entry {
-  id: number;
+  id: string; // Firebase генерира string ID
   date: string;
   type: "приход" | "разход";
   amount: number;
@@ -26,9 +27,41 @@ export default function MonthlyReport() {
       return;
     }
 
-    const res = await fetch(`/api/cash-book?month=${month}&year=${year}`);
-    const data = await res.json();
-    setReport(data);
+    try {
+      const data = await fetchEntries();
+      const entries = Object.entries(data || {}).map(([id, entry]) => ({
+        id,
+        ...entry,
+      })) as Entry[];
+
+      // Филтриране на записите за избрания месец и година
+      const filteredEntries = entries.filter((entry) => {
+        const entryDate = new Date(entry.date);
+        return (
+          entryDate.getMonth() + 1 === parseInt(month) &&
+          entryDate.getFullYear() === parseInt(year)
+        );
+      });
+
+      // Изчисляване на приходите, разходите и баланса
+      const totalIncome = filteredEntries
+        .filter((entry) => entry.type === "приход")
+        .reduce((sum, entry) => sum + entry.amount, 0);
+
+      const totalExpense = filteredEntries
+        .filter((entry) => entry.type === "разход")
+        .reduce((sum, entry) => sum + entry.amount, 0);
+
+      setReport({
+        entries: filteredEntries,
+        totalIncome,
+        totalExpense,
+        balance: totalIncome - totalExpense,
+      });
+    } catch (error) {
+      console.error("Error generating report:", error);
+      alert("Неуспешно генериране на отчет!");
+    }
   };
 
   return (

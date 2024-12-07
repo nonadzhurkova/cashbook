@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
+import { fetchEntries, addEntry, deleteEntry } from "../pages/api/firebase-utils"; // Firebase utility functions
 
 interface Entry {
-  id: number;
+  id: string; // Firebase генерира string ID
   date: string;
   type: "приход" | "разход";
   amount: number;
   description: string;
 }
-
-
 
 export default function CashBook() {
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -21,54 +20,74 @@ export default function CashBook() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    fetchEntries();
+    loadEntries();
   }, []);
 
-  const fetchEntries = async () => {
+  const loadEntries = async () => {
     setIsLoading(true);
-    const res = await fetch("/api/cash-book");
-    const data = await res.json();
-
-    // Sort entries by date in descending order
-    const sortedData = data.sort(
-      (a: Entry, b: Entry) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
+    try {
+      const data = await fetchEntries();
+      console.log("Fetched data:", data);
+  
+      if (!data || typeof data !== "object") {
+        console.error("Invalid data format:", data);
+        setEntries([]);
+        return;
+      }
+  
+      const sortedData = Object.entries(data || {})
+      .map(([id, entry]) => {
+        // Изключваме `id`, ако вече съществува в `entry`
+        const { id: _, ...rest } = entry as Entry; // Премахваме `id` от `entry`
+        return {
+          id, // Уникалният ключ от Firebase
+          ...rest, // Останалите полета
+        };
+      })
+      .sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime() // Сортиране по дата
+      );
 
     setEntries(sortedData);
-    setIsLoading(false);
-  };
 
-  const addEntry = async () => {
+    } catch (error) {
+      console.error("Error loading entries:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+
+  const handleAddEntry = async () => {
     if (!amount || !description || !date) {
       alert("Моля, попълнете всички полета!");
       return;
     }
 
-    const newEntry = { type, amount: parseFloat(amount), description, date };
+    const newEntry = {
+      date,
+      type,
+      amount: parseFloat(amount),
+      description,
+    };
 
-    await fetch("/api/cash-book", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newEntry),
-    });
-
-    setAmount("");
-    setDescription("");
-   // setDate(""); // Reset to today's date
-    await fetchEntries();
+    try {
+      await addEntry(newEntry);
+      setAmount("");
+      setDescription("");
+      setDate(new Date().toISOString().split("T")[0]);
+      loadEntries();
+    } catch (error) {
+      console.error("Error adding entry:", error);
+    }
   };
 
-  const deleteEntry = async (id: number) => {
-    const res = await fetch("/api/cash-book", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
-    });
-
-    if (res.ok) {
-      // Update state after deletion
-      setEntries((prevEntries) => prevEntries.filter((entry) => entry.id !== id));
-    } else {
+  const handleDeleteEntry = async (id: string) => {
+    try {
+      await deleteEntry(id);
+      loadEntries();
+    } catch (error) {
+      console.error("Error deleting entry:", error);
       alert("Неуспешно изтриване!");
     }
   };
@@ -125,7 +144,7 @@ export default function CashBook() {
           />
         </div>
         <button
-          onClick={addEntry}
+          onClick={handleAddEntry}
           className="mt-4 w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition"
         >
           Добави запис
@@ -154,8 +173,8 @@ export default function CashBook() {
                     key={entry.id}
                     className={
                       entry.type === "приход"
-                        ? "bg-green-100" // Light green for income
-                        : "bg-red-100" // Light red for expense
+                        ? "bg-green-100"
+                        : "bg-red-100"
                     }
                   >
                     <td className="px-4 py-2 border">
@@ -166,7 +185,7 @@ export default function CashBook() {
                     <td className="px-4 py-2 border">{entry.description}</td>
                     <td className="px-4 py-2 border">
                       <button
-                        onClick={() => deleteEntry(entry.id)}
+                        onClick={() => handleDeleteEntry(entry.id)}
                         className="text-gray-500 hover:text-red-500 transition"
                       >
                         🗑️
@@ -195,7 +214,9 @@ export default function CashBook() {
                 onClick={() => changePage(page + 1)}
                 disabled={page === totalPages}
                 className={`px-4 py-2 border rounded-lg ${
-                  page === totalPages ? "text-gray-400" : "text-blue-500 hover:bg-blue-100"
+                  page === totalPages
+                    ? "text-gray-400"
+                    : "text-blue-500 hover:bg-blue-100"
                 }`}
               >
                 Следваща
@@ -204,7 +225,6 @@ export default function CashBook() {
           </div>
         )}
       </div>
-
     </div>
   );
 }
