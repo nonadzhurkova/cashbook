@@ -29,11 +29,15 @@ export default function MonthlyReport() {
 
     try {
       const data = await fetchEntries();
-      const entries = Object.entries(data || {}).map(([id, entry]) => ({
-        id,
-        ...entry,
-      })) as Entry[];
-
+    
+      const entries = Object.entries(data || {}).map(([id, entry]) => {
+        const { id: _, ...rest } = entry as Entry; // Премахваме `id`, ако съществува
+        return {
+          id, // Уникалният ключ от Firebase
+          ...rest, // Останалите свойства
+        };
+      });
+      
       // Филтриране на записите за избрания месец и година
       const filteredEntries = entries.filter((entry) => {
         const entryDate = new Date(entry.date);
