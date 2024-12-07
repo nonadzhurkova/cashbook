@@ -8,8 +8,8 @@ export default function Login() {
   const router = useRouter();
 
   const handleLogin = () => {
-    const hardcodedUsername = "Linden";
-    const hardcodedPassword = "yambol";
+    const hardcodedUsername = process.env.NEXT_PUBLIC_LOGIN_USERNAME;
+    const hardcodedPassword = process.env.NEXT_PUBLIC_LOGIN_PASSWORD;
 
     if (username === hardcodedUsername && password === hardcodedPassword) {
       sessionStorage.setItem("loggedIn", "true");
