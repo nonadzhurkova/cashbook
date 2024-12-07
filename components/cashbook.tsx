@@ -106,7 +106,7 @@ export default function CashBook() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6">
+    <div className="max-w-6xl mx-auto bg-white shadow-lg rounded-lg p-6">
       <h1 className="text-2xl font-bold text-gray-700 text-center mb-6">
         Касова книга
       </h1>
@@ -173,7 +173,7 @@ export default function CashBook() {
                     key={entry.id}
                     className={
                       entry.type === "приход"
-                      ? "bg-blue-50" // Лек син фон за приходите
+                      ? "bg-indigo-100" // Лек син фон за приходите
                       : "bg-orange-50" // Лек оранжев фон за разходите
                     }
                   >
