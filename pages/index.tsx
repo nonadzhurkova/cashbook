@@ -11,12 +11,11 @@ export default function Home() {
     if (!isLoggedIn) {
       router.push("/login"); // Redirect to login if not logged in
     }
-  }, [router]);
+  }, [router])
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      {/* Menu */}
-      <Navbar />
+    <div >
+    
 
       {/* Content */}
       <CashBook />

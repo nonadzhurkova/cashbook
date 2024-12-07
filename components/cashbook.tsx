@@ -145,7 +145,7 @@ export default function CashBook() {
         </div>
         <button
           onClick={handleAddEntry}
-          className="mt-4 w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition"
+          className="mt-4 w-full bg-indigo-700 text-white py-2 rounded-lg hover:bg-indigo-900 transition"
         >
           Добави запис
         </button>
@@ -173,22 +173,31 @@ export default function CashBook() {
                     key={entry.id}
                     className={
                       entry.type === "приход"
-                        ? "bg-green-100"
-                        : "bg-red-100"
+                      ? "bg-blue-50" // Лек син фон за приходите
+                      : "bg-orange-50" // Лек оранжев фон за разходите
                     }
                   >
                     <td className="px-4 py-2 border">
                       {new Date(entry.date).toLocaleDateString()}
                     </td>
-                    <td className="px-4 py-2 border">{entry.type}</td>
+                    <td className="px-4 py-2 border text-blue-600">{entry.type}</td>
                     <td className="px-4 py-2 border">{entry.amount.toFixed(2)} лв</td>
                     <td className="px-4 py-2 border">{entry.description}</td>
                     <td className="px-4 py-2 border">
                       <button
                         onClick={() => handleDeleteEntry(entry.id)}
-                        className="text-gray-500 hover:text-red-500 transition"
+                        className="text-red-500 hover:text-red-700 focus:outline-none"
                       >
-                        🗑️
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                          className="w-6 h-6"
+                        >
+                          <path
+                            d="M9 3V4H4V6H5V19C5 20.1 5.9 21 7 21H17C18.1 21 19 20.1 19 19V6H20V4H15V3H9ZM7 19V6H17V19H7ZM9 8H11V17H9V8ZM13 8H15V17H13V8Z"
+                          />
+                        </svg>
                       </button>
                     </td>
                   </tr>

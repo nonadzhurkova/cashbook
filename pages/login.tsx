@@ -46,7 +46,7 @@ export default function Login() {
         </div>
         <button
           onClick={handleLogin}
-          className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition"
+          className="w-full bg-indigo-700 text-white py-2 rounded-lg hover:bg-indigo-900 transition"
         >
           Вход
         </button>
