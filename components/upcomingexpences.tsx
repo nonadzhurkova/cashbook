@@ -40,10 +40,13 @@ export default function UpcomingExpenses() {
     setIsLoading(true);
     try {
       const data = await fetchUpcomingEntries();
-      const sortedData = Object.entries(data || {}).map(([id, expense]) => ({
-        id,
-        ...(expense as Expense),
-      }));
+      const sortedData = Object.entries(data || {}).map(([id, expense]) => {
+        const { id: _, ...rest } = expense as Expense;
+        return {
+          id,
+          ...rest,
+        };
+      });
       setExpenses(sortedData);
     } catch (error) {
       console.error("Error loading expenses:", error);
@@ -51,6 +54,7 @@ export default function UpcomingExpenses() {
       setIsLoading(false);
     }
   };
+
 
   const applyFilter = () => {
     if (filter === "All") {
