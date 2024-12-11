@@ -12,27 +12,18 @@ interface Expense {
   date: string;
   description: string;
   amount: number;
-  type: "Яна" | "Others";
 }
 
-export default function UpcomingExpenses() {
+export default function UpcomingExpensesOld() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [filteredExpenses, setFilteredExpenses] = useState<Expense[]>([]);
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
-  const [type, setType] = useState<"Яна" | "Others">("Яна");
-  const [filter, setFilter] = useState<"All" | "Яна" | "Others">("All");
   const [isLoading, setIsLoading] = useState(false);
-  const [editMode, setEditMode] = useState<string | null>(null);
 
   useEffect(() => {
     loadExpenses();
   }, []);
-
-  useEffect(() => {
-    applyFilter();
-  }, [expenses, filter]);
 
   const loadExpenses = async () => {
     setIsLoading(true);
@@ -53,16 +44,8 @@ export default function UpcomingExpenses() {
     }
   };
 
-  const applyFilter = () => {
-    if (filter === "All") {
-      setFilteredExpenses(expenses);
-    } else {
-      setFilteredExpenses(expenses.filter((expense) => expense.type === filter));
-    }
-  };
-
   const handleAddExpense = async () => {
-    if (!amount || !description || !date || !type) {
+    if (!amount || !description || !date) {
       alert("Моля, попълнете всички полета!");
       return;
     }
@@ -71,14 +54,12 @@ export default function UpcomingExpenses() {
       date,
       description,
       amount: parseFloat(amount),
-      type,
     };
 
     try {
       await addUpcomingEntry(newExpense);
       setAmount("");
       setDescription("");
-      setType("Яна");
       setDate(new Date().toISOString().split("T")[0]);
       loadExpenses();
     } catch (error) {
@@ -116,19 +97,6 @@ export default function UpcomingExpenses() {
     }
   };
 
-  const handleEditExpense = async (id: string, updatedExpense: Partial<Expense>) => {
-    try {
-      const expenseIndex = expenses.findIndex((expense) => expense.id === id);
-      const updatedExpenses = [...expenses];
-      updatedExpenses[expenseIndex] = { ...updatedExpenses[expenseIndex], ...updatedExpense };
-      setExpenses(updatedExpenses);
-      setEditMode(null);
-      // Optionally, update the expense in Firebase
-    } catch (error) {
-      console.error("Error editing expense:", error);
-    }
-  };
-
   return (
     <div className="max-w-6xl mx-auto bg-white shadow-lg rounded-lg p-6">
       <h1 className="text-2xl font-bold text-gray-700 text-center mb-6">
@@ -137,7 +105,7 @@ export default function UpcomingExpenses() {
 
       {/* Form for Adding Expenses */}
       <div className="mb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <input
             type="text"
             placeholder="Описание"
@@ -158,14 +126,6 @@ export default function UpcomingExpenses() {
             onChange={(e) => setDate(e.target.value)}
             className="border border-gray-300 rounded-lg p-2"
           />
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value as "Яна" | "Others")}
-            className="border border-gray-300 rounded-lg p-2"
-          >
-            <option value="Яна">Яна</option>
-            <option value="Others">Others</option>
-          </select>
         </div>
         <button
           onClick={handleAddExpense}
@@ -173,19 +133,6 @@ export default function UpcomingExpenses() {
         >
           Добави разход
         </button>
-      </div>
-
-      {/* Filter */}
-      <div className="mb-6">
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value as "All" | "Яна" | "Others")}
-          className="border border-gray-300 rounded-lg p-2"
-        >
-          <option value="All">Всички</option>
-          <option value="Яна">Яна</option>
-          <option value="Others">Others</option>
-        </select>
       </div>
 
       {/* Expenses Table */}
@@ -199,96 +146,54 @@ export default function UpcomingExpenses() {
                 <th className="px-4 py-2 border">Дата</th>
                 <th className="px-4 py-2 border">Описание</th>
                 <th className="px-4 py-2 border">Сума</th>
-                <th className="px-4 py-2 border">Тип</th>
                 <th className="px-4 py-2 border">Действия</th>
               </tr>
             </thead>
             <tbody>
-              {filteredExpenses.map((expense) => (
+              {expenses.map((expense) => (
                 <tr key={expense.id}>
-                  <td className="px-4 py-2 border">
-                    {editMode === expense.id ? (
-                      <input
-                        type="date"
-                        value={expense.date}
-                        onChange={(e) =>
-                          handleEditExpense(expense.id, { date: e.target.value })
-                        }
-                      />
-                    ) : (
-                      new Date(expense.date).toLocaleDateString()
-                    )}
-                  </td>
-                  <td className="px-4 py-2 border">
-                    {editMode === expense.id ? (
-                      <input
-                        type="text"
-                        value={expense.description}
-                        onChange={(e) =>
-                          handleEditExpense(expense.id, { description: e.target.value })
-                        }
-                      />
-                    ) : (
-                      expense.description
-                    )}
-                  </td>
-                  <td className="px-4 py-2 border">
-                    {editMode === expense.id ? (
-                      <input
-                        type="number"
-                        value={expense.amount}
-                        onChange={(e) =>
-                          handleEditExpense(expense.id, { amount: parseFloat(e.target.value) })
-                        }
-                      />
-                    ) : (
-                      `${expense.amount.toFixed(2)} лв`
-                    )}
-                  </td>
-                  <td className="px-4 py-2 border">
-                    {editMode === expense.id ? (
-                      <select
-                        value={expense.type}
-                        onChange={(e) =>
-                          handleEditExpense(expense.id, { type: e.target.value as "Яна" | "Others" })
-                        }
-                        className="border border-gray-300 rounded-lg p-2"
-                      >
-                        <option value="Яна">Яна</option>
-                        <option value="Others">Others</option>
-                      </select>
-                    ) : (
-                      expense.type
-                    )}
-                  </td>
+                  <td className="px-4 py-2 border">{new Date(expense.date).toLocaleDateString()}</td>
+                  <td className="px-4 py-2 border">{expense.description}</td>
+                  <td className="px-4 py-2 border">{expense.amount.toFixed(2)} лв</td>
                   <td className="px-4 py-2 border flex space-x-4">
                     <button
                       onClick={() => handleDeleteExpense(expense.id)}
                       className="text-red-500 hover:text-red-700 focus:outline-none"
                     >
-                      🗑️
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        className="w-6 h-6"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7L5 7M10 11V17M14 11V17M17 7V19C17 20.1046 16.1046 21 15 21H9C7.89543 21 7 20.1046 7 19V7M9 7V5C9 3.89543 9.89543 3 11 3H13C14.1046 3 15 3.89543 15 5V7"
+                        />
+                      </svg>
                     </button>
                     <button
                       onClick={() => handleCopyToCashBook(expense.id)}
                       className="text-green-500 hover:text-green-700 focus:outline-none"
                     >
-                      📋
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        className="w-6 h-6"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12h6M9 16h6M9 20h6M9 4h6M5 8h14M5 12h14M5 16h14M5 20h14"
+                        />
+                      </svg>
                     </button>
-                    {editMode === expense.id ? (
-                      <button
-                        onClick={() => setEditMode(null)}
-                        className="text-indigo-500 hover:text-indigo-700 focus:outline-none"
-                      >
-                        Съхрани
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => setEditMode(expense.id)}
-                        className="text-yellow-500 hover:text-yellow-700 focus:outline-none"
-                      >
-                        ✏️
-                      </button>
-                    )}
                   </td>
                 </tr>
               ))}
