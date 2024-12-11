@@ -35,7 +35,7 @@ export async function fetchUpcomingExpense(id: string) {
 
 
 // Добавяне на нов запис за предстоящи разходи
-export async function addUpcomingEntry(entry: { date: string; description: string; amount: number }) {
+export async function addUpcomingEntry(entry: { date: string; description: string; amount: number ; type: string }) {
   const dbRef = ref(database, "upcoming-expenses");
   await push(dbRef, entry); // Използваме push за добавяне на нов запис
 }
@@ -46,6 +46,10 @@ export async function deleteUpcomingEntry(id: string) {
   await remove(entryRef); // Изтриваме записа
 }
 
+export async function updateUpcomingEntry(id: string, updatedData: Partial<Expense>) {
+  const entryRef = ref(database, `upcoming-expenses/${id}`);
+  await update(entryRef, updatedData);
+}
 // Копиране на запис в cash-book
 export async function copyToCashBook(entry: Entry) {
   const cashBookRef = ref(database, "cash-book");
@@ -57,6 +61,13 @@ interface Entry {
   type: "приход" | "разход";
   amount: number;
   description: string;
+}
+interface Expense {
+  id: string;
+  date: string;
+  description: string;
+  amount: number;
+  type: "Яна" | "Others";
 }
 
 // Fetch all bookings

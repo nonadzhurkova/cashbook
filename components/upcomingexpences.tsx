@@ -5,6 +5,7 @@ import {
   addUpcomingEntry,
   deleteUpcomingEntry,
   copyToCashBook,
+  updateUpcomingEntry
 } from "../pages/api/firebase-utils";
 
 interface Expense {
@@ -25,6 +26,7 @@ export default function UpcomingExpenses() {
   const [filter, setFilter] = useState<"All" | "Яна" | "Others">("All");
   const [isLoading, setIsLoading] = useState(false);
   const [editMode, setEditMode] = useState<string | null>(null);
+  const [tempEdit, setTempEdit] = useState<Partial<Expense>>({});
 
   useEffect(() => {
     loadExpenses();
@@ -38,13 +40,10 @@ export default function UpcomingExpenses() {
     setIsLoading(true);
     try {
       const data = await fetchUpcomingEntries();
-      const sortedData = Object.entries(data || {}).map(([id, expense]) => {
-        const { id: _, ...rest } = expense as Expense;
-        return {
-          id,
-          ...rest,
-        };
-      });
+      const sortedData = Object.entries(data || {}).map(([id, expense]) => ({
+        id,
+        ...(expense as Expense),
+      }));
       setExpenses(sortedData);
     } catch (error) {
       console.error("Error loading expenses:", error);
@@ -116,16 +115,29 @@ export default function UpcomingExpenses() {
     }
   };
 
-  const handleEditExpense = async (id: string, updatedExpense: Partial<Expense>) => {
+  const handleEditStart = (id: string, expense: Expense) => {
+    setEditMode(id);
+    setTempEdit({ ...expense }); // Store current values in tempEdit
+  };
+
+  const handleEditSave = async () => {
     try {
-      const expenseIndex = expenses.findIndex((expense) => expense.id === id);
-      const updatedExpenses = [...expenses];
-      updatedExpenses[expenseIndex] = { ...updatedExpenses[expenseIndex], ...updatedExpense };
-      setExpenses(updatedExpenses);
+      const updatedExpense = tempEdit;
+      if (!editMode || !updatedExpense) return;
+
+      // Update in Firebase (if needed)
+      await updateUpcomingEntry(editMode, updatedExpense);
+
+      setExpenses((prev) =>
+        prev.map((expense) =>
+          expense.id === editMode ? { ...expense, ...updatedExpense } : expense
+        )
+      );
       setEditMode(null);
-      // Optionally, update the expense in Firebase
+      setTempEdit({});
     } catch (error) {
-      console.error("Error editing expense:", error);
+      console.error("Error saving changes:", error);
+      alert("Грешка при записване на промените!");
     }
   };
 
@@ -210,9 +222,9 @@ export default function UpcomingExpenses() {
                     {editMode === expense.id ? (
                       <input
                         type="date"
-                        value={expense.date}
+                        value={tempEdit.date || expense.date}
                         onChange={(e) =>
-                          handleEditExpense(expense.id, { date: e.target.value })
+                          setTempEdit((prev) => ({ ...prev, date: e.target.value }))
                         }
                       />
                     ) : (
@@ -223,9 +235,12 @@ export default function UpcomingExpenses() {
                     {editMode === expense.id ? (
                       <input
                         type="text"
-                        value={expense.description}
+                        value={tempEdit.description || expense.description}
                         onChange={(e) =>
-                          handleEditExpense(expense.id, { description: e.target.value })
+                          setTempEdit((prev) => ({
+                            ...prev,
+                            description: e.target.value,
+                          }))
                         }
                       />
                     ) : (
@@ -236,9 +251,12 @@ export default function UpcomingExpenses() {
                     {editMode === expense.id ? (
                       <input
                         type="number"
-                        value={expense.amount}
+                        value={tempEdit.amount || expense.amount}
                         onChange={(e) =>
-                          handleEditExpense(expense.id, { amount: parseFloat(e.target.value) })
+                          setTempEdit((prev) => ({
+                            ...prev,
+                            amount: parseFloat(e.target.value) || 0,
+                          }))
                         }
                       />
                     ) : (
@@ -248,9 +266,12 @@ export default function UpcomingExpenses() {
                   <td className="px-4 py-2 border">
                     {editMode === expense.id ? (
                       <select
-                        value={expense.type}
+                        value={tempEdit.type || expense.type}
                         onChange={(e) =>
-                          handleEditExpense(expense.id, { type: e.target.value as "Яна" | "Others" })
+                          setTempEdit((prev) => ({
+                            ...prev,
+                            type: e.target.value as "Яна" | "Others",
+                          }))
                         }
                         className="border border-gray-300 rounded-lg p-2"
                       >
@@ -276,14 +297,14 @@ export default function UpcomingExpenses() {
                     </button>
                     {editMode === expense.id ? (
                       <button
-                        onClick={() => setEditMode(null)}
+                        onClick={handleEditSave}
                         className="text-indigo-500 hover:text-indigo-700 focus:outline-none"
                       >
                         Съхрани
                       </button>
                     ) : (
                       <button
-                        onClick={() => setEditMode(expense.id)}
+                        onClick={() => handleEditStart(expense.id, expense)}
                         className="text-yellow-500 hover:text-yellow-700 focus:outline-none"
                       >
                         ✏️
