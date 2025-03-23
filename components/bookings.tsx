@@ -22,7 +22,7 @@ export default function Bookings() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [page, setPage] = useState(1);
-  const [itemsPerPage] = useState(5);
+  const [itemsPerPage] = useState(10);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -108,7 +108,6 @@ export default function Bookings() {
   const currentBookings = bookings.slice(indexOfFirstItem, indexOfLastItem);
 
   const totalPages = Math.ceil(bookings.length / itemsPerPage);
-
   return (
     <div className="max-w-6xl mx-auto bg-white shadow-lg rounded-lg p-6">
       <h1 className="text-2xl font-bold text-gray-700 text-center mb-6">Резервации</h1>
