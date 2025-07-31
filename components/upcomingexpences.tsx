@@ -318,6 +318,15 @@ export default function UpcomingExpenses() {
                 </tr>
               ))}
             </tbody>
+            <tfoot>
+              <tr className="bg-gray-50 font-semibold">
+                <td className="px-4 py-2 border" colSpan={2}>Общо:</td>
+                <td className="px-4 py-2 border">
+                  {filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0).toFixed(2)} лв
+                </td>
+                <td className="px-4 py-2 border" colSpan={2}></td>
+              </tr>
+            </tfoot>
           </table>
         )}
       </div>
