@@ -18,10 +18,16 @@ export default function CashBook() {
   const [page, setPage] = useState(1); // Current page
   const [itemsPerPage] = useState(10); // Items per page
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear()); // Default to current year
 
   useEffect(() => {
     loadEntries();
   }, []);
+
+  // Reset page to 1 when year changes
+  useEffect(() => {
+    setPage(1);
+  }, [selectedYear]);
 
   const loadEntries = async () => {
     setIsLoading(true);
@@ -92,12 +98,44 @@ export default function CashBook() {
     }
   };
 
-  // Pagination logic
+  // Filter entries by selected year
+  const filteredEntries = entries.filter(entry => {
+    const entryYear = new Date(entry.date).getFullYear();
+    return entryYear === selectedYear;
+  });
+
+  // Pagination logic with filtered entries
   const indexOfLastItem = page * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentEntries = entries.slice(indexOfFirstItem, indexOfLastItem);
+  const currentEntries = filteredEntries.slice(indexOfFirstItem, indexOfLastItem);
 
-  const totalPages = Math.ceil(entries.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredEntries.length / itemsPerPage);
+
+  // Get currency symbol based on year
+  const getCurrencySymbol = (year: number) => {
+    return year < 2026 ? "лв" : "€";
+  };
+
+  // Calculate summary totals for selected year
+  const totalIncome = filteredEntries
+    .filter(entry => entry.type === "приход")
+    .reduce((sum, entry) => sum + entry.amount, 0);
+
+  const totalExpenses = filteredEntries
+    .filter(entry => entry.type === "разход")
+    .reduce((sum, entry) => sum + entry.amount, 0);
+
+  const profit = totalIncome - totalExpenses;
+
+  // Generate year options from entries
+  const yearOptions = Array.from(
+    new Set(entries.map(entry => new Date(entry.date).getFullYear()))
+  ).sort((a, b) => b - a); // Sort descending
+
+  // Add current year if not in entries yet
+  if (!yearOptions.includes(new Date().getFullYear())) {
+    yearOptions.unshift(new Date().getFullYear());
+  }
 
   const changePage = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -107,9 +145,52 @@ export default function CashBook() {
 
   return (
     <div className="max-w-6xl mx-auto bg-white shadow-lg rounded-lg p-6">
-      <h1 className="text-2xl font-bold text-gray-700 text-center mb-6">
-        Касова книга
-      </h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-700">
+          Касова книга
+        </h1>
+        <div className="flex items-center gap-2">
+          <label className="text-gray-600">Година:</label>
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+            className="border border-gray-300 rounded-lg p-2"
+          >
+            {yearOptions.map(year => (
+              <option key={year} value={year}>{year}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Summary Section */}
+      <div className="bg-gray-50 rounded-lg p-4 mb-6">
+        <h2 className="text-lg font-semibold text-gray-800 mb-3">
+          Обобщение за {selectedYear} година
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+            <div className="text-sm text-green-600 font-medium">Общ приход</div>
+            <div className="text-xl font-bold text-green-700">
+              {totalIncome.toFixed(2)} {getCurrencySymbol(selectedYear)}
+            </div>
+          </div>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <div className="text-sm text-red-600 font-medium">Общ разход</div>
+            <div className="text-xl font-bold text-red-700">
+              {totalExpenses.toFixed(2)} {getCurrencySymbol(selectedYear)}
+            </div>
+          </div>
+          <div className={`border rounded-lg p-3 ${profit >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'}`}>
+            <div className={`text-sm font-medium ${profit >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+              Печалба до момента
+            </div>
+            <div className={`text-xl font-bold ${profit >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
+              {profit.toFixed(2)} {getCurrencySymbol(selectedYear)}
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Form for Adding Entries */}
       <div className="mb-6">
@@ -181,7 +262,9 @@ export default function CashBook() {
                       {new Date(entry.date).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-2 border text-blue-600">{entry.type}</td>
-                    <td className="px-4 py-2 border">{entry.amount.toFixed(2)} лв</td>
+                    <td className="px-4 py-2 border">
+                      {entry.amount.toFixed(2)} {getCurrencySymbol(new Date(entry.date).getFullYear())}
+                    </td>
                     <td className="px-4 py-2 border">{entry.description}</td>
                     <td className="px-4 py-2 border">
                       <button

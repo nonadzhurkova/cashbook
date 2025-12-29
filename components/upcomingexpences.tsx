@@ -145,6 +145,11 @@ export default function UpcomingExpenses() {
     }
   };
 
+  // Get currency symbol based on year
+  const getCurrencySymbol = (year: number) => {
+    return year < 2026 ? "лв" : "€";
+  };
+
   return (
     <div className="max-w-6xl mx-auto bg-white shadow-lg rounded-lg p-6">
       <h1 className="text-2xl font-bold text-gray-700 text-center mb-6">
@@ -264,7 +269,7 @@ export default function UpcomingExpenses() {
                         }
                       />
                     ) : (
-                      `${expense.amount.toFixed(2)} лв`
+                      `${expense.amount.toFixed(2)} ${getCurrencySymbol(new Date(expense.date).getFullYear())}`
                     )}
                   </td>
                   <td className="px-4 py-2 border">
@@ -322,7 +327,21 @@ export default function UpcomingExpenses() {
               <tr className="bg-gray-50 font-semibold">
                 <td className="px-4 py-2 border" colSpan={2}>Общо:</td>
                 <td className="px-4 py-2 border">
-                  {filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0).toFixed(2)} лв
+                  {(() => {
+                    const levTotal = filteredExpenses
+                      .filter(expense => new Date(expense.date).getFullYear() < 2026)
+                      .reduce((sum, expense) => sum + expense.amount, 0);
+
+                    const euroTotal = filteredExpenses
+                      .filter(expense => new Date(expense.date).getFullYear() >= 2026)
+                      .reduce((sum, expense) => sum + expense.amount, 0);
+
+                    const parts = [];
+                    if (levTotal > 0) parts.push(`${levTotal.toFixed(2)} лв`);
+                    if (euroTotal > 0) parts.push(`${euroTotal.toFixed(2)} €`);
+
+                    return parts.join(' + ') || '0.00 лв';
+                  })()}
                 </td>
                 <td className="px-4 py-2 border" colSpan={2}></td>
               </tr>
