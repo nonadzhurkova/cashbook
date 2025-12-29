@@ -1,4 +1,4 @@
-import { database, ref,  get, push, remove, update } from "../../firebase-config";
+import { database, ref,  get, push, remove, update } from "../firebase-config";
 
 // Четене на записи
 export async function fetchEntries() {

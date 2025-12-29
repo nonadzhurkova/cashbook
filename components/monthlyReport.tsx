@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { fetchEntries } from "../pages/api/firebase-utils"; // Импортирайте вашата функция за четене от Firebase
+import { fetchEntries } from "../lib/firebase-utils"; // Импортирайте вашата функция за четене от Firebase
 
 interface Entry {
   id: string; // Firebase генерира string ID

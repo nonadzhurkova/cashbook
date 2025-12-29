@@ -1,6 +1,6 @@
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import { fetchEntries } from "../pages/api/firebase-utils"; // Firebase utility functions
+import { fetchEntries } from "../lib/firebase-utils"; // Firebase utility functions
 import ChartProfit from "@/components/chartprofit";
 import CumulativeChart from "@/components/chartcumulative";
 import BalanceChart from "@/components/chartbalance";

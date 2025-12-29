@@ -1,6 +1,6 @@
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import { fetchEntries } from "../pages/api/firebase-utils"; // Firebase utility functions
+import { fetchEntries } from "../lib/firebase-utils"; // Firebase utility functions
 
 // Динамичен импорт за ApexCharts
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });

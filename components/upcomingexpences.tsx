@@ -6,7 +6,7 @@ import {
   deleteUpcomingEntry,
   copyToCashBook,
   updateUpcomingEntry
-} from "../pages/api/firebase-utils";
+} from "../lib/firebase-utils";
 
 interface Expense {
   id: string;

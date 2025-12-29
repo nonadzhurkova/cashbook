@@ -4,7 +4,7 @@ import {
   addBooking,
   updateBookingStatus,
   deleteBooking
-} from "../pages/api/firebase-utils";
+} from "../lib/firebase-utils";
 
 interface Booking {
   id: string;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { fetchEntries, addEntry, deleteEntry } from "../pages/api/firebase-utils"; // Firebase utility functions
+import { fetchEntries, addEntry, deleteEntry } from "../lib/firebase-utils"; // Firebase utility functions
 
 interface Entry {
   id: string; // Firebase генерира string ID
