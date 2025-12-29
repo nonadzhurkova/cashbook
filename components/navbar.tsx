@@ -46,6 +46,12 @@ export default function Navbar() {
             Начало
           </Link>
           <Link
+            href="/cashbook"
+            className="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-500 transition"
+          >
+            Касова книга
+          </Link>
+          <Link
             href="/reports"
             className="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-500 transition"
           >
@@ -82,6 +88,13 @@ export default function Navbar() {
               onClick={() => setIsMenuOpen(false)}
             >
               Начало
+            </Link>
+            <Link
+              href="/cashbook"
+              className="block px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-500 transition"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Касова книга
             </Link>
             <Link
               href="/reports"
